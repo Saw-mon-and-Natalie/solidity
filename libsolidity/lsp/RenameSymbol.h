@@ -38,7 +38,6 @@ protected:
 		void endVisit(frontend::ImportDirective const& _node) override;
 		void endVisit(frontend::Identifier const& _node) override { endVisitNode(_node); }
 		void endVisit(frontend::IdentifierPath const& _node) override;
-		void endVisit(frontend::UsingForDirective const& _node) override;
 
 		private:
 			RenameSymbol& m_outer;
@@ -47,7 +46,6 @@ protected:
 	void extractNameAndDeclaration(frontend::ASTNode const& _node, int _cursorBytePosition);
 	void extractNameAndDeclaration(frontend::IdentifierPath const& _identifierPath, int _cursorBytePosition);
 	void extractNameAndDeclaration(frontend::ImportDirective const& _importDirective, int _cursorBytePosition);
-	void extractNameAndDeclaration(frontend::UsingForDirective const& _usingForDirective, int _cursorBytePosition);
 
 	// Node to rename
 	frontend::Declaration const* m_declarationToRename = nullptr;

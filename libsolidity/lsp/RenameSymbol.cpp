@@ -131,9 +131,7 @@ void RenameSymbol::extractNameAndDeclaration(frontend::ASTNode const& _node, int
 	else if (auto const* identifierPath = dynamic_cast<IdentifierPath const*>(&_node))
 		extractNameAndDeclaration(*identifierPath, _cursorBytePosition);
 	else
-	{
-
-	}
+		solAssert(false, "Unexpected ASTNODE id: " + to_string(_node.id()));
 }
 
 void RenameSymbol::extractNameAndDeclaration(frontend::ImportDirective const& _importDirective, int _cursorBytePosition)
@@ -180,7 +178,6 @@ void RenameSymbol::extractNameAndDeclaration(frontend::IdentifierPath const& _id
 			m_declarationToRename = _identifierPath.annotation().pathDeclarations[i];
 			m_symbolName = _identifierPath.path()[i];
 		}
-
 	}
 }
 
@@ -203,32 +200,4 @@ void RenameSymbol::Visitor::endVisit(frontend::IdentifierPath const& _node)
 		)
 			m_outer.m_locations.emplace_back(_node.pathLocations()[i]);
 	}
-}
-
-void RenameSymbol::extractNameAndDeclaration(frontend::UsingForDirective const& _importDirective, int _cursorBytePosition)
-{
-	for (UsingForDirective::SymbolAlias const& symbolAlias: _importDirective.symbolAliases())
-		if (symbolAlias.location.containsOffset(_cursorBytePosition))
-		{
-			solAssert(symbolAlias.alias);
-			m_symbolName = *symbolAlias.alias;
-			m_declarationToRename = &_importDirective;
-			break;
-		}
-}
-
-void RenameSymbol::Visitor::endVisit(frontend::UsingForDirective const& _node)
-{
-	// If an import directive is to be renamed, it can only be because it
-	// defines the symbol that is being renamed.
-	if (&_node != m_outer.m_declarationToRename)
-		return;
-
-	size_t const sizeBefore = m_outer.m_locations.size();
-
-	for (frontend::UsingForDirective::SymbolAlias const& symbolAlias: _node.symbolAliases())
-		if (symbolAlias.alias != nullptr && *symbolAlias.alias == m_outer.m_symbolName)
-			m_outer.m_locations.emplace_back(symbolAlias.location);
-
-	solAssert(sizeBefore < m_outer.m_locations.size(), "Found no source location in UsingForDirective?!");
 }
