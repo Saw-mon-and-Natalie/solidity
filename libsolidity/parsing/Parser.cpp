@@ -1061,14 +1061,27 @@ ASTPointer<IdentifierPath> Parser::parseIdentifierPath()
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.markEndPosition();
+
+	SourceLocation identifierLocation{currentLocation()};
+
 	vector<ASTString> identifierPath{*expectIdentifierToken()};
+
+	identifierLocation.end = currentLocation().end;
+	vector<SourceLocation> identifierPathLocations{identifierLocation};
+
 	while (m_scanner->currentToken() == Token::Period)
 	{
 		advance();
+
+		identifierLocation = currentLocation();
 		nodeFactory.markEndPosition();
+
 		identifierPath.push_back(*expectIdentifierTokenOrAddress());
+
+		identifierLocation.end = currentLocation().end;
+		identifierPathLocations.push_back(identifierLocation);
 	}
-	return nodeFactory.createNode<IdentifierPath>(identifierPath);
+	return nodeFactory.createNode<IdentifierPath>(identifierPath, identifierPathLocations);
 }
 
 ASTPointer<TypeName> Parser::parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory)
@@ -2286,9 +2299,16 @@ ASTPointer<TypeName> Parser::typeNameFromIndexAccessStructure(Parser::IndexAcces
 	else
 	{
 		vector<ASTString> path;
+		vector<SourceLocation> pathLocations;
+
 		for (auto const& el: _iap.path)
-			path.push_back(dynamic_cast<Identifier const&>(*el).name());
-		type = nodeFactory.createNode<UserDefinedTypeName>(nodeFactory.createNode<IdentifierPath>(path));
+		{
+			auto& identifier = dynamic_cast<Identifier const&>(*el);
+			path.push_back(identifier.name());
+			pathLocations.push_back(identifier.location());
+		}
+
+		type = nodeFactory.createNode<UserDefinedTypeName>(nodeFactory.createNode<IdentifierPath>(path, pathLocations));
 	}
 	for (auto const& lengthExpression: _iap.indices)
 	{

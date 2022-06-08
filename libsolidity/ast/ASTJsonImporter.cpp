@@ -334,7 +334,11 @@ ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value con
 		astAssert(!s.empty(), "Expected non-empty string for IdentifierPath element.");
 		namePath.emplace_back(s);
 	}
-	return createASTNode<IdentifierPath>(_node, namePath);
+	return createASTNode<IdentifierPath>(
+		_node,
+		namePath,
+		vector<SourceLocation>{ /* Data not exported, create dummy array. */ }
+	);
 }
 
 ASTPointer<InheritanceSpecifier> ASTJsonImporter::createInheritanceSpecifier(Json::Value const& _node)
